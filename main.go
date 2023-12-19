@@ -66,9 +66,9 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			var buf [UDP_BUFFER_SIZE + 2]byte
+			ln := make([]byte, 2)
 
-			_, err := io.ReadFull(tConn, buf[:])
+			_, err := io.ReadFull(tConn, ln)
 
 			// _, err := tConn.Read(buf)
 
@@ -77,10 +77,17 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 				continue
 			}
 
-			length := binary.LittleEndian.Uint16(buf[0:2])
+			length := binary.LittleEndian.Uint16(ln)
+
+			messageln := make([]byte, length)
+
+			if _, err := io.ReadFull(tConn, messageln); err != nil {
+				log.Println(err)
+				continue
+			}
 
 			// log.Println("got with length", length)
-			if _, err := conn.Write(buf[2 : length+2]); err != nil {
+			if _, err := conn.Write(messageln); err != nil {
 				log.Println(err)
 				continue
 			}
@@ -91,8 +98,8 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			var buf []byte
-			uBuff := make([]byte, UDP_BUFFER_SIZE)
+			// var buf []byte
+			var uBuff []byte
 			leg := make([]byte, 2)
 
 			i, _, err := conn.ReadFromUDP(uBuff)
@@ -105,10 +112,12 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 			binary.LittleEndian.PutUint16(leg, uint16(i))
 
-			buf = append(buf, leg...)
-			buf = append(buf, uBuff...)
+			if _, err := tConn.Write(leg); err != nil {
+				log.Println(err)
+				continue
+			}
 
-			if _, err := tConn.Write(buf); err != nil {
+			if _, err := tConn.Write(uBuff); err != nil {
 				log.Println(err)
 				continue
 			}
