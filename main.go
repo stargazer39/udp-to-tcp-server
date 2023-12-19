@@ -13,7 +13,7 @@ import (
 const UDP_BUFFER_SIZE = 8192
 
 func main() {
-	udpAddrStr := flag.String("u", ":51280", "UDP to addr")
+	udpAddrStr := flag.String("u", ":51820", "UDP to addr")
 	tcpAddrStr := flag.String("l", ":8088", "Listen addr")
 
 	flag.Parse()
