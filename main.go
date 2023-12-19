@@ -85,7 +85,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 	go func() {
 		for {
 			// var buf []byte
-			var uBuff []byte
+			var uBuff = make([]byte, UDP_BUFFER_SIZE)
 
 			i, _, err := conn.ReadFromUDP(uBuff)
 			// log.Println("read udp")
