@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -63,9 +64,11 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			buf := make([]byte, 1026)
+			var buf [1026]byte
 
-			_, err := tConn.Read(buf)
+			_, err := io.ReadFull(tConn, buf[:])
+
+			// _, err := tConn.Read(buf)
 
 			if err != nil {
 				log.Println(err)
