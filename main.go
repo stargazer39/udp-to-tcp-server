@@ -36,7 +36,7 @@ func main() {
 			fmt.Println(err)
 		}
 		// Handle new connections in a Goroutine for concurrency
-		manageConn(conn, *udpAddrStr)
+		go manageConn(conn, *udpAddrStr)
 	}
 }
 
