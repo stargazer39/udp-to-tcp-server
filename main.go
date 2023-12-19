@@ -114,7 +114,6 @@ func sendBuffer(buffer []byte, conn net.Conn) error {
 	if err != nil {
 		return err
 	}
-	log.Println(i, "dffd")
 
 	if i != len(length) {
 		log.Fatal("len")
@@ -139,8 +138,6 @@ func recvbuffer(conn net.Conn) ([]byte, error) {
 	if _, err := io.ReadFull(conn, length); err != nil {
 		return nil, err
 	}
-
-	log.Println(binary.LittleEndian.Uint16(length), "nnj")
 
 	msg := make([]byte, binary.LittleEndian.Uint16(length))
 
