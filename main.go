@@ -66,28 +66,14 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			ln := make([]byte, 2)
 
-			_, err := io.ReadFull(tConn, ln)
-
-			// _, err := tConn.Read(buf)
+			buf, err := recvbuffer(tConn)
 
 			if err != nil {
-				log.Println(err)
-				continue
+				break
 			}
-
-			length := binary.LittleEndian.Uint16(ln)
-
-			messageln := make([]byte, length)
-
-			if _, err := io.ReadFull(tConn, messageln); err != nil {
-				log.Println(err)
-				continue
-			}
-
 			// log.Println("got with length", length)
-			if _, err := conn.Write(messageln); err != nil {
+			if _, err := conn.Write(buf); err != nil {
 				log.Println(err)
 				continue
 			}
@@ -100,29 +86,67 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 		for {
 			// var buf []byte
 			var uBuff []byte
-			leg := make([]byte, 2)
 
 			i, _, err := conn.ReadFromUDP(uBuff)
 			// log.Println("read udp")
 
 			if err != nil {
 				log.Println(err)
-				continue
+				break
 			}
 
-			binary.LittleEndian.PutUint16(leg, uint16(i))
-
-			if _, err := tConn.Write(leg); err != nil {
+			if err := sendBuffer(uBuff[:i], tConn); err != nil {
 				log.Println(err)
-				continue
+				break
 			}
-
-			if _, err := tConn.Write(uBuff); err != nil {
-				log.Println(err)
-				continue
-			}
-
 			// log.Println("wrote udp buf")
 		}
 	}()
+}
+
+func sendBuffer(buffer []byte, conn net.Conn) error {
+	length := make([]byte, 2)
+
+	binary.LittleEndian.PutUint16(length, uint16(len(buffer)))
+
+	i, err := conn.Write(length)
+
+	if err != nil {
+		return err
+	}
+	log.Println(i, "dffd")
+
+	if i != len(length) {
+		log.Fatal("len")
+	}
+
+	j, err := conn.Write(buffer)
+
+	if err != nil {
+		return err
+	}
+
+	if j != len(buffer) {
+		log.Fatal("buf")
+	}
+
+	return nil
+}
+
+func recvbuffer(conn net.Conn) ([]byte, error) {
+	length := make([]byte, 2)
+
+	if _, err := io.ReadFull(conn, length); err != nil {
+		return nil, err
+	}
+
+	log.Println(binary.LittleEndian.Uint16(length), "nnj")
+
+	msg := make([]byte, binary.LittleEndian.Uint16(length))
+
+	if _, err := io.ReadFull(conn, msg); err != nil {
+		return nil, err
+	}
+
+	return msg, nil
 }
