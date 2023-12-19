@@ -86,7 +86,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			buf := make([]byte, 1026)
+			var buf []byte
 			uBuff := make([]byte, 1024)
 			leg := make([]byte, 2)
 
