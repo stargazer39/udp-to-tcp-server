@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const UDP_BUFFER_SIZE = 64 * 1024 * 1024
+const UDP_BUFFER_SIZE = 8192
 
 func main() {
 	udpAddrStr := flag.String("u", ":51280", "UDP to addr")
