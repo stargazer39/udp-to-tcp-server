@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+const UDP_BUFFER_SIZE = 64 * 1024 * 1024
+
 func main() {
 	udpAddrStr := flag.String("u", ":51280", "UDP to addr")
 	tcpAddrStr := flag.String("l", ":8088", "Listen addr")
@@ -64,7 +66,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 	go func() {
 		for {
-			var buf [1026]byte
+			var buf [UDP_BUFFER_SIZE + 2]byte
 
 			_, err := io.ReadFull(tConn, buf[:])
 
@@ -90,7 +92,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 	go func() {
 		for {
 			var buf []byte
-			uBuff := make([]byte, 1024)
+			uBuff := make([]byte, UDP_BUFFER_SIZE)
 			leg := make([]byte, 2)
 
 			i, _, err := conn.ReadFromUDP(uBuff)
