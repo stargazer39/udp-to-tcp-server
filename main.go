@@ -72,7 +72,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 				return
 			}
 
-			length := binary.LittleEndian.Uint16(buf[:2])
+			length := binary.LittleEndian.Uint16(buf)
 
 			if _, err := conn.Write(buf[2:length]); err != nil {
 				log.Println(err)
