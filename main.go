@@ -29,9 +29,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Println("listening on ", tcpAddr.String())
+
 	for {
 		// Accept new connections
 		conn, err := listener.Accept()
+
+		log.Println("got connection")
 		if err != nil {
 			fmt.Println(err)
 		}
