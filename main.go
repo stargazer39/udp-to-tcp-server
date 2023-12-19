@@ -77,13 +77,13 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 
 			length := binary.LittleEndian.Uint16(buf[0:2])
 
-			log.Println("got with length", length)
+			// log.Println("got with length", length)
 			if _, err := conn.Write(buf[2 : length+2]); err != nil {
 				log.Println(err)
 				continue
 			}
 
-			log.Println("wrote with length", length)
+			// log.Println("wrote with length", length)
 		}
 	}()
 
@@ -94,7 +94,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 			leg := make([]byte, 2)
 
 			i, _, err := conn.ReadFromUDP(uBuff)
-			log.Println("read udp")
+			// log.Println("read udp")
 
 			if err != nil {
 				log.Println(err)
@@ -111,7 +111,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 				continue
 			}
 
-			log.Println("wrote udp buf")
+			// log.Println("wrote udp buf")
 		}
 	}()
 }
