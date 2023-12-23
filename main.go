@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -15,8 +16,12 @@ const UDP_BUFFER_SIZE = 8192
 func main() {
 	udpAddrStr := flag.String("u", ":51820", "UDP to addr")
 	tcpAddrStr := flag.String("l", ":8088", "Listen addr")
+	tlsEnabled := flag.Bool("tls", false, "Enable TLS")
+	tlsCert := flag.String("tls-cert", "random", "Set cert path. default \"random\" will generate a random cert)")
 
 	flag.Parse()
+
+	var err error
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", *tcpAddrStr)
 
@@ -24,8 +29,31 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	// Start listening for TCP connections on the given address
-	listener, err := net.ListenTCP("tcp", tcpAddr)
+
+	var listener net.Listener
+	var tlsCertificate tls.Certificate
+
+	if *tlsEnabled {
+		if *tlsCert == "random" {
+			cert, key := GenRandomCert()
+
+			tlsCertificate, err = tls.X509KeyPair(cert, key)
+
+			if err != nil {
+				log.Fatal("Cannot be loaded the certificate.", err.Error())
+			}
+		} else {
+			log.Fatal("No cert. bye")
+		}
+
+		listener, err = tls.Listen("tcp", *tcpAddrStr, &tls.Config{Certificates: []tls.Certificate{tlsCertificate}})
+	} else {
+		listener, err = net.ListenTCP("tcp", tcpAddr)
+	}
+
+	if err != nil {
+		log.Fatal("Can't listen on port specified.", err.Error())
+	}
 
 	if err != nil {
 		fmt.Println(err)
