@@ -12,6 +12,7 @@ import (
 )
 
 const UDP_BUFFER_SIZE = 8192
+const MAX_PACKET_SIZE = 8194
 
 func main() {
 	udpAddrStr := flag.String("u", ":51820", "UDP to addr")
@@ -63,20 +64,17 @@ func main() {
 	log.Println("listening on ", tcpAddr.String())
 
 	for {
-		// Accept new connections
 		conn, err := listener.Accept()
 
 		log.Println("got connection")
 		if err != nil {
 			fmt.Println(err)
 		}
-		// Handle new connections in a Goroutine for concurrency
 		go manageConn(conn, *udpAddrStr)
 	}
 }
 
 func manageConn(tConn net.Conn, udpAddrStr string) {
-	// Resolve the string address to a UDP address
 	udpAddr, err := net.ResolveUDPAddr("udp", udpAddrStr)
 
 	log.Println(udpAddrStr)
@@ -85,7 +83,6 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 		return
 	}
 
-	// Dial to the address with UDP
 	conn, err2 := net.DialUDP("udp", nil, udpAddr)
 
 	if err2 != nil {
@@ -94,15 +91,18 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 	}
 
 	go func() {
+		var buf [MAX_PACKET_SIZE]byte
+
 		for {
 
-			buf, err := recvbuffer(tConn)
+			err, n := recvbuffer(tConn, buf[:])
 
 			if err != nil {
 				break
 			}
-			// log.Println("got with length", len(buf))
-			if _, err := conn.Write(buf); err != nil {
+
+			log.Println("got with length", len(buf))
+			if _, err := conn.Write(buf[2:n]); err != nil {
 				log.Println(err)
 				continue
 			}
@@ -161,18 +161,21 @@ func sendBuffer(buffer []byte, conn net.Conn) error {
 	return nil
 }
 
-func recvbuffer(conn net.Conn) ([]byte, error) {
-	length := make([]byte, 2)
+func recvbuffer(conn net.Conn, buff []byte) (error, int) {
 
-	if _, err := io.ReadFull(conn, length); err != nil {
-		return nil, err
+	if _, err := io.ReadAtLeast(conn, buff, 2); err != nil {
+		return err, 0
 	}
 
-	msg := make([]byte, binary.LittleEndian.Uint16(length))
+	length := binary.LittleEndian.Uint16(buff[:2])
 
-	if _, err := io.ReadFull(conn, msg); err != nil {
-		return nil, err
+	if length > MAX_PACKET_SIZE-2 {
+		return fmt.Errorf("too big"), 0
 	}
 
-	return msg, nil
+	if _, err := io.ReadAtLeast(conn, buff[2:length+2], int(length)); err != nil {
+		return err, 0
+	}
+
+	return nil, int(length) + 2
 }
