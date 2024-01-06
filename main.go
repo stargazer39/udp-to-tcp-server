@@ -79,6 +79,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 	// Resolve the string address to a UDP address
 	udpAddr, err := net.ResolveUDPAddr("udp", udpAddrStr)
 
+	log.Println(udpAddrStr)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -100,7 +101,7 @@ func manageConn(tConn net.Conn, udpAddrStr string) {
 			if err != nil {
 				break
 			}
-			// log.Println("got with length", length)
+			// log.Println("got with length", len(buf))
 			if _, err := conn.Write(buf); err != nil {
 				log.Println(err)
 				continue
